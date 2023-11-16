@@ -1,3 +1,4 @@
+from typing import Optional
 import discord, gnupg, os
 from discord import app_commands, Button, client, Embeds, Intents, Interaction
 from discord.ext import commands
@@ -11,7 +12,15 @@ mongo_client = MongoClient(MONGO_URI)
 database = mongo_client["AutoKicker"]
 guild_collection = database.guild_collection
 
-class InviteButton()
+class InviteButton(View):
+    def __init__(self, support_invite: str):
+        super().__init__()
+
+        self.support_invite = support_invite
+
+    @discord.ui.button(label="📨 Support Server", style=discord.ButtonStyle.blurple)
+    async def support_invite_btn(self, interaction: Interaction, button: Button) -> None:
+        await interaction.response.send_message(self.support_invite, ephemeral=True)
 
 class AutoKicker(client):
     def __init__(self, bot_id:int = 1174796137862021190, guild_id:int = 1174803169168085132, synced:bool = False) -> None:
