@@ -20,3 +20,17 @@ class AutoKicker(client):
         
         def __str__(self) -> str:
             return f"Running with Bot ID: {self.bot_id}\nIgnoring auto kick feature for {self.guild_id}\nRunning in {self} servers"
+
+    async def on_ready(self) -> None:
+        try:
+            await tree.sync()
+            self.synced = True
+            await self.change_presence(
+                activity=discord.Streaming(
+                    name="/help", url="https://twitch.tv/gothamchess")
+            )
+
+            print(self)
+
+        except Exception as e:
+            print(Exception)
