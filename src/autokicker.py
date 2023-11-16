@@ -1,5 +1,4 @@
-from typing import Optional
-import discord, gnupg, os
+import discord, gnupg, os, pymongo
 from discord import app_commands, Button, client, Embeds, Intents, Interaction
 from discord.ext import commands
 from discord.ui import View
@@ -12,11 +11,25 @@ mongo_client = MongoClient(MONGO_URI)
 database = mongo_client["AutoKicker"]
 guild_collection = database.guild_collection
 
+def insert_into_db(guild_entry: dict) -> bool:
+    try:
+        guild_collection.update_one({guild_entry}, {"$set": guild_entry}, upsert=True)
+        return True
+    except pymongo.errors.ServerSelectionTimeoutError:
+        insert_into_db(guild_entry)
+
+    except pymongo.errors.BulkWriteError:
+        insert_into_db(guild_entry)
+    
+    except pymongo.errors.DuplicateKeyError:
+        insert_into_db(guild_entry)
+
 class InviteButton(View):
     def __init__(self, support_invite: str):
         super().__init__()
 
         self.support_invite = support_invite
+        self.add_item(discord.ui.Button(label="🖥️ Source code", style=discord.ButtonStyle.green, url="https://github.com/ibnaleem/AutoKicker/blob/main/src/autokicker.py"))
 
     @discord.ui.button(label="📨 Support Server", style=discord.ButtonStyle.blurple)
     async def support_invite_btn(self, interaction: Interaction, button: Button) -> None:
@@ -28,6 +41,7 @@ class AutoKicker(client):
         
         self.bot_id = bot_id
         self.guild_id = guild_id
+        self.guild = self.fetch_guild(guild_id)
         self.synced = synced
 
         def __len__(self) -> int:
@@ -49,3 +63,17 @@ class AutoKicker(client):
 
         except Exception as e:
             print(Exception)
+
+    async def on_guild_join(self, guild) -> None:
+
+        support_server = self.guild.channel.create_invite(reason=f"Support server requested by {guild.owner.name}", max_uses=1)
+
+        if guild.id != self.guild_id:
+
+            insert_into_db({"guild_id": guild.id})
+
+            if insert_into_db:
+                try:
+                    await guild.owner.send(f"✅ **{guild.name} ({guild.id})** was successfully added to my database. Thank you for inviting AutoKick", view=InviteButton(str(support_server)))
+                except discord.Forbidden:
+                    # add more
