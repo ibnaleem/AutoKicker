@@ -250,4 +250,15 @@ async def disable(interaction: Interaction):
                 pass
 
 
+@tree.command(description="Displays help command")
+async def help(interaction: Interaction):
+    embed = Embed(
+        title="AutoKicker Help",
+        description="Auto kicks new members until a member is whitelisted via **/whitelist** command.\n\nThere are 3 methods to whitelisting a member\n\n**1. Default using Member ID**\n```/whitelist [member-id]```\n\n**2. Mention**\nIf a member has joined the server *before* AutoKicker (or during the time autokick was disabled), you can mention the member to **/whitelist** them:\n```/whitelist @member-mention```\n\n **3. Risky (Disable AutoKick)\n```/disable```\n\nRemember that you must run **/enable** to re-enable auto-kicking. You check this using **/status**.\n\n**Errors & Support** You can click the button below to join my support server, or **[open an issue on my GitHub](https://github.com/ibnaleem/AutoKicker/issues)**", color=client.green)
+    
+    embed.set_footer(text="/help", icon_url=client.user.avatar)
+    embed.set_thumbnail(url=client.user.avatar)
+
+    await interaction.response.send_message(embed=embed, view=InviteButton(str(client.support_server)))
+
 client.run(DISCORD_BOT_TOKEN)
