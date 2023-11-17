@@ -219,45 +219,34 @@ async def disable(interaction: Interaction):
     command_user = interaction.user
     guild_id = interaction.guild.id
 
-    # Check if the settings document exists
     current_settings = guild_collection.find_one({"settings": {"$exists": True}})
 
     if current_settings:
-        # Update the settings to disable auto-kicking
         guild_collection.update_one(
             {"settings": {"$exists": True}}, {"$set": {"settings": "false"}}
         )
 
         try:
-            # Try sending a message using interaction response
             await interaction.response.send_message("✅ Auto-kicking has been disabled.")
         except:
             try:
-                # If sending via interaction response fails, try sending a direct message
                 await command_user.send_message("✅ Auto-kicking has been disabled.")
             except discord.errors.Forbidden:
-                # If both attempts fail, simply pass
                 pass
     else:
-        # Insert the settings document with "false"
         guild_collection.insert_one({"guild_id": guild_id, "settings": "false"})
 
-        # Check if the guild document exists
         current_guild = guild_collection.find_one({"guild_id": guild_id})
 
         if not current_guild:
-            # Insert the guild document if it doesn't exist
             guild_collection.insert_one({"guild_id": guild_id, "settings": "false"})
 
         try:
-            # Try sending a message using interaction response
             await interaction.response.send_message("✅ Auto-kicking has been disabled.")
         except:
             try:
-                # If sending via interaction response fails, try sending a direct message
                 await command_user.send_message("✅ Auto-kicking has been disabled.")
             except discord.errors.Forbidden:
-                # If both attempts fail, simply pass
                 pass
 
 
