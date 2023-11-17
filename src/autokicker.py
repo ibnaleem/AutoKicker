@@ -291,7 +291,7 @@ async def disable(interaction: Interaction):
 async def help(interaction: Interaction):
     embed = Embed(
         title="AutoKicker Help",
-        description="Auto kicks new members until a member is whitelisted via **/whitelist** command.\n\nThere are 3 methods to whitelisting a member\n\n**1. Default using Member ID**\n```/whitelist [member-id]```**2. Mention**\nIf a member has joined the server *before* AutoKicker (or during the time autokick was disabled), you can mention the member to **/whitelist** them:\n```/whitelist @member-mention```**3. Risky (Disable AutoKick)**\n```/disable```Remember that you must run **/enable** to re-enable auto-kicking. You check this using **/status**.\n\n**Errors & Support** You can click the button below to join my support server, or **[open an issue on my GitHub](https://github.com/ibnaleem/AutoKicker/issues)**",
+        description="Auto kicks new members until a member is whitelisted via **/whitelist** command.\n\nThere are 3 methods to whitelisting a member.\n\n**1. Default using Member ID**```/whitelist [member-id]```\n**2. Mention**\nIf a member has joined the server *before* AutoKicker (or during the time autokick was disabled), you can mention the member to **/whitelist** them:```/whitelist @member-mention```\n**3. Risky (Disable AutoKick)**\n```/disable```\nRemember that you must run **/enable** to re-enable auto-kicking. You check this using **/status**.\n\n**Errors & Support** You can click the button below to join my support server, or **[open an issue on my GitHub](https://github.com/ibnaleem/AutoKicker/issues)**",
         color=client.green,
     )
 
