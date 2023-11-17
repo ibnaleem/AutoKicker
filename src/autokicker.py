@@ -3,6 +3,7 @@ from discord import app_commands, Button, client, Embed, Intents, Interaction
 from discord.ext import commands
 from discord.ui import View
 from pymongo import MongoClient
+from typing import Optional
 
 MONGO_URI = os.getenv("MONGO_URI")
 DISCORD_BOT_TOKEN = os.getenv("DISCORD_BOT_TOKEN")
@@ -28,6 +29,7 @@ def insert_into_db(guild_entry: dict) -> bool or Exception:
     except Exception as e:
         print(e)
 
+
 class InviteButton(View):
     def __init__(self, support_invite: str):
         super().__init__()
@@ -35,11 +37,8 @@ class InviteButton(View):
         self.support_invite = support_invite
         self.add_item(
             discord.ui.Button(
-                label="🖥️ Source code"
-               , style=discord.ButtonStyle.green
-               , url="https://github.com/ibnaleem/AutoKicker/blob/main/src/autokicker.py",
-            )
-        )
+                label="🖥️ Source code",
+                style=discord.ButtonStyle.green,url="https://github.com/ibnaleem/AutoKicker/blob/main/src/autokicker.py"))
 
     @discord.ui.button(label="📨 Support Server", style=discord.ButtonStyle.blurple)
     async def support_invite_btn(
@@ -159,14 +158,12 @@ class AutoKicker(client):
 
     async def on_member_join(self, member: discord.Member) -> None:
         def check(member: discord.Member) -> bool:
-            
             if not guild_collection.find_one({"member_id": member.id}):
-                if not guild_collection.find_one({"settings":"true"}):
+                if not guild_collection.find_one({"settings": "true"}):
                     return False
-                
+
                 return True
-                
-            
+
             return False
 
         if check:
@@ -182,7 +179,7 @@ class AutoKicker(client):
                     guild=guild,
                     message=f"❌ Auto-kicking feature not enabled: I am missing permissions to kick members. Please update my role or grant me `MODERATE_MEMBERS` and `KICK_MEMBERS` permissions.",
                 )
-            
+
             except commands.MemberNotFound:
                 pass
 
@@ -193,5 +190,23 @@ class AutoKicker(client):
             pass
 
 
+client = AutoKicker() 
+tree = app_commands.CommandTree(client)
 
-                
+@tree.command(description="Whitelist a member from auto-kicking")
+@app_commands.has_permissions(kick_members=True)
+async def whitelist(interaction: Interaction, member: Optional[discord.Member] = None, member_id: Optional[int or str] = None):
+    
+    command_user = interaction.user
+
+    if (member and not member_id):  
+        member_id = member.id
+
+    insert_into_db({"member_id": member_id})
+
+    if insert_into_db:
+        await command_user.send_message(f"✅ **{member_id}** has been whitelisted")
+    
+    else:
+        # handle error
+        pass
