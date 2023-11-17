@@ -15,19 +15,17 @@ guild_collection = database.guild_collection
 
 def insert_into_db(guild_entry: dict) -> bool or Exception:
     try:
-        guild_collection.update_one({guild_entry}, {"$set": guild_entry}, upsert=True)
+        guild_collection.insert_one(guild_entry)
         return True
-    except pymongo.errors.ServerSelectionTimeoutError:
-        insert_into_db(guild_entry)
-
-    except pymongo.errors.BulkWriteError:
-        insert_into_db(guild_entry)
-
-    except pymongo.errors.DuplicateKeyError:
-        insert_into_db(guild_entry)
-
+    except pymongo.errors.ServerSelectionTimeoutError as e:
+        print(f"ServerSelectionTimeoutError: {e}")
+    except pymongo.errors.BulkWriteError as e:
+        print(f"BulkWriteError: {e}")
+    except pymongo.errors.DuplicateKeyError as e:
+        print(f"DuplicateKeyError: {e}")
     except Exception as e:
-        print(e)
+        print(f"An error occurred: {e}")
+    return False
 
 
 class InviteButton(View):
@@ -65,6 +63,8 @@ class AutoKicker(Client):
         self.guild_id = guild_id
         self.synced = synced
         self.yellow = 0xFFFF00
+        self.green = 0x00FF02
+        self.support_server = "https://discord.gg/Z38zqxHRFQ"
 
         @property
         async def guild(self) -> discord.Guild:
@@ -104,10 +104,7 @@ class AutoKicker(Client):
                 isinstance(channel, discord.TextChannel)
                 and channel.permissions_for(guild.me).send_messages
             ):
-                await channel.send(
-                    message,
-                    view=InviteButton(str(support_server)),
-                )
+                await channel.send(message, view=InviteButton(str(support_server)))
                 return True
             else:
                 return False
@@ -116,57 +113,36 @@ class AutoKicker(Client):
         self, owner: discord.Member, guild: discord.Guild, message: str
     ) -> None:
         if message == "success":
-            message = "✅ **{guild.name} ({guild.id})** was successfully added to my database. Thank you for inviting AutoKick"
+            message = f"✅ **{guild.name}** was successfully added to my database. Thank you for inviting <@{self.bot_id}>"
         else:
             pass
 
+        embed = Embed(description=message, color=self.green)
+        embed.timestamp = datetime.datetime.utcnow()
+        embed.set_footer(text="run /whitelist for whitelisting members")
+
         try:
-            await owner.send(message)
+            await owner.send(embed=embed, view=InviteButton(str(self.support_server)))
         except discord.Forbidden:
-            if (
-                self.channel_perms_check(
-                    guild,
-                    message="success",
-                )
-                is None
-            ):
-                if message == "warn":
-                    title = "⚠️ Guild Owner Not Informed About Guild Configuration"
-                    description = f"Could not inform {guild.owner.mention} **({guild.owner.name})** that their server {guild.name} ({guild.id}) has been configured for auto kicking"
-                else:
-                    title = "❌ Could Not Configure Guild"
-                    description = f"Could not inform {guild.owner.mention} **({guild.owner.name})** that their server {guild.name} ({guild.id}) has **not been configured** for auto kicking"
-
-                em = Embed(title=title, description=description, color=self.yellow)
-                em.timestamp = datetime.datetime.utcnow()
-
-                await self.error_channel.send(embed=em)
-            else:
-                pass
+            self.channel_perms_check(guild, message="success")
 
     async def on_guild_join(self, guild: discord.Guild) -> None:
-        
-        channel = guild.get_channel(1174803169604276356)
-
-        support_server = await channel.create_invite(
-            reason=f"Support server requested", max_uses=1
-        )
-
         if guild.id != self.guild_id:
             insert_into_db({"guild_id": guild.id, "settings": "true"})
 
             if insert_into_db:
-                await self.message_guild_owner(
-                    owner=guild.owner,
-                    guild=guild,
-                    message=f"✅ **{guild.name} ({guild.id})** was successfully added to my database. Thank you for inviting AutoKick",
-                    view=InviteButton(str(support_server)),
-                )
+                owner = await guild.fetch_member(guild.owner_id)
 
-                await self.message_guild_owner("warn")
-
+                if owner:
+                    await self.message_guild_owner(
+                        owner=owner,
+                        guild=guild,
+                        message=f"✅ | **{guild.name}** was successfully added to my database. Thank you for inviting <@{self.bot_id}>",
+                    )
+                else:
+                    print("Owner not found")
             else:
-                await self.message_guild_owner("error")
+                print("handle error")
 
     async def on_member_join(self, member: discord.Member) -> None:
         def check(member: discord.Member) -> bool:
