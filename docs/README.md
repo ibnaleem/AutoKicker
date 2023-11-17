@@ -1,6 +1,6 @@
 <div id="title" align="center">
     <h1><a href="https://discord.com/api/oauth2/authorize?client_id=1174796137862021190&permissions=1376604515526&scope=bot">AutoKicker</a></h1>
-    <p>a Discord bot that auto kicks new members until a member is whitelisted via `/whitelist` command. See more with `/help`</p>
+    <p>a Discord bot that auto kicks new members until a member is whitelisted via <b>/whitelist</b> command. See more with <b>/help</b></p>
     <a href="https://github.com/ibnaleem/AutoKicker/blob/main/LICENSE"><img src="https://img.shields.io/github/license/ibnaleem/AutoKicker?style=for-the-badge"></a>
     <a href="https://discord.gg/Z38zqxHRFQ"><img src="https://img.shields.io/discord/1174803169168085132?style=for-the-badge"></a>
     <a href="https://github.com/ibnaleem/AutoKicker/stargazers"><img src="https://img.shields.io/github/stars/ibnaleem/AutoKicker.svg?style=for-the-badge"></a>
