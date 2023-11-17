@@ -303,10 +303,6 @@ async def help(interaction: Interaction):
         embed=embed, view=InviteButton(str(client.support_server))
     )
 
-
-import discord
-
-
 @tree.command(description="Check auto-kicking status")
 async def status(interaction: Interaction):
     guild_id = interaction.guild.id
