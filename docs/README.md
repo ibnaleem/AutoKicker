@@ -12,6 +12,11 @@
 ## Invite
 #### [Click here to invite bot](https://discord.com/api/oauth2/authorize?client_id=1174796137862021190&permissions=1376604515526&scope=bot) ([PGP Signature](https://pastebin.com/3VdascnY))
 
+## Purpose
+[Ninja](https://www.youtube.com/channel/UCAW-NpUFkMyCNrvRSSGIvDQ) and his friends use a private Discord for party-chats and group-chats. However, [Speed](https://www.youtube.com/@IShowSpeed) accidentally leaked the Discord server link which resulted in the server being nuked (too many members to bulk ban + channels are likely not privated). I decided to create this bot so Ninja and other streamers can have good security on their private servers.
+
+Some advice: always permission lock channels in-case of a leak.
+
 ## Usage
 There are 3 methods to whitelisting a member.
 
