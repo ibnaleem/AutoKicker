@@ -24,6 +24,11 @@ def insert_into_db(guild_entry: dict) -> bool:
     except pymongo.errors.DuplicateKeyError:
         insert_into_db(guild_entry)
 
+    except Exception as e:
+        print(e)
+
+
+
 class InviteButton(View):
     def __init__(self, support_invite: str):
         super().__init__()
@@ -41,7 +46,7 @@ class AutoKicker(client):
         
         self.bot_id = bot_id
         self.guild_id = guild_id
-        self.guild = self.fetch_guild(guild_id)
+        self.guild = discord.Client().fetch_guild(guild_id)
         self.synced = synced
 
         def __len__(self) -> int:
@@ -64,6 +69,16 @@ class AutoKicker(client):
         except Exception as e:
             print(Exception)
 
+    async def channel_perms_check(self, guild: discord.Guild) -> bool:
+        
+        support_server = self.guild.channel.create_invite(reason=f"Support server requested by {guild.owner.name}", max_uses=1)
+        for channel in guild.channels:
+            if isinstance(channel, discord.TextChannel) and channel.permissions_for(guild.me).send_messages:
+                await channel.send(f"✅ **{guild.name} ({guild.id})** was successfully added to my database. Thank you for inviting AutoKick", view=InviteButton(str(support_server)))
+                return True
+            else:
+                return False
+
     async def on_guild_join(self, guild) -> None:
 
         support_server = self.guild.channel.create_invite(reason=f"Support server requested by {guild.owner.name}", max_uses=1)
@@ -76,4 +91,7 @@ class AutoKicker(client):
                 try:
                     await guild.owner.send(f"✅ **{guild.name} ({guild.id})** was successfully added to my database. Thank you for inviting AutoKick", view=InviteButton(str(support_server)))
                 except discord.Forbidden:
-                    # add more
+                    self.channel_perms_check(guild)
+
+
+
