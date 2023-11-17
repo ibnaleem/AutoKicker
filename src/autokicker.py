@@ -154,7 +154,7 @@ class AutoKicker(Client):
 
             return False
 
-        if check:
+        if check(member):
             try:
                 await member.kick(
                     reason="Autokicking feature on: member is not whitelisted"
@@ -167,9 +167,6 @@ class AutoKicker(Client):
                     guild=guild,
                     message=f"❌ Auto-kicking feature not enabled: I am missing permissions to kick members. Please update my role or grant me `MODERATE_MEMBERS` and `KICK_MEMBERS` permissions.",
                 )
-
-            except commands.MemberNotFound:
-                pass
 
             except Exception as e:
                 print(e)
