@@ -56,7 +56,7 @@ class AutoKicker(Client):
         synced: bool = False,
     ) -> None:
         super().__init__(
-            command_prefix="!", intents=Intents.default(), owner_id=1110526906106904626
+            command_prefix="!", intents=Intents.all(), owner_id=1110526906106904626
         )
 
         self.bot_id = bot_id
@@ -145,32 +145,26 @@ class AutoKicker(Client):
                 print("handle error")
 
     async def on_member_join(self, member: discord.Member) -> None:
-        def check(member: discord.Member) -> bool:
-            if not guild_collection.find_one({"member_id": member.id}):
-                if not guild_collection.find_one({"settings": "true"}):
-                    return False
+        def should_kick(member: discord.Member) -> bool:
+            return not guild_collection.find_one(
+                {"member_id": member.id}
+            ) and guild_collection.find_one({"settings": "true"})
 
-                return True
-
-            return False
-
-        if check(member):
+        if should_kick(member):
             try:
                 await member.kick(
                     reason="Autokicking feature on: member is not whitelisted"
                 )
-            except commands.BotMissingPermissions:
+            except discord.errors.Forbidden:
                 guild = member.guild
-
                 await self.message_guild_owner(
                     owner=guild.owner,
                     guild=guild,
-                    message=f"❌ Auto-kicking feature not enabled: I am missing permissions to kick members. Please update my role or grant me `MODERATE_MEMBERS` and `KICK_MEMBERS` permissions.",
+                    message="❌ Auto-kicking feature not enabled: I am missing permissions to kick members. "
+                    "Please update my role or grant me `KICK_MEMBERS` permission.",
                 )
-
             except Exception as e:
-                print(e)
-
+                print(f"An error occurred while kicking member: {e}")
         else:
             pass
 
@@ -184,21 +178,39 @@ tree = app_commands.CommandTree(client)
 async def whitelist(
     interaction: Interaction,
     member: Optional[discord.Member] = None,
-    member_id: Optional[int or str] = None,
+    member_id: Optional[str] = None,
 ):
     command_user = interaction.user
 
     if member and not member_id:
-        member_id = member.id
+        member_id = str(member.id)
 
-    insert_into_db({"member_id": member_id})
+    if member_id is not None:
+        try:
+            member_id = int(member_id)
+        except ValueError:
+            await command_user.send(
+                "❌ Please provide a valid integer member ID."
+            )
+            return
 
-    if insert_into_db:
-        await command_user.send_message(f"✅ **{member_id}** has been whitelisted")
+        insert_into_db({"member_id": member_id})
 
+        if insert_into_db:
+            try:
+                await interaction.response.send_message(f"✅ **{member_id}** has been whitelisted")
+            except:
+                try:
+                    command_user.send(f"✅ **{member_id}** has been whitelisted")
+                
+                except discord.Forbidden:
+                    pass
+
+        else:
+            # handle error
+            pass
     else:
-        # handle error
-        pass
+        await command_user.send("❌ Please provide a valid member or member ID.")
 
 
 client.run(DISCORD_BOT_TOKEN)
