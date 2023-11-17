@@ -64,6 +64,7 @@ class AutoKicker(Client):
         self.synced = synced
         self.yellow = 0xFFFF00
         self.green = 0x00FF02
+        self.red = 0xFF0000
         self.support_server = "https://discord.gg/Z38zqxHRFQ"
 
         @property
@@ -301,6 +302,41 @@ async def help(interaction: Interaction):
     await interaction.response.send_message(
         embed=embed, view=InviteButton(str(client.support_server))
     )
+
+
+import discord
+
+
+@tree.command(description="Check auto-kicking status")
+async def status(interaction: Interaction):
+    guild_id = interaction.guild.id
+
+    current_settings = guild_collection.find_one(
+        {"guild_id": guild_id, "settings": {"$exists": True}}
+    )
+
+    if current_settings:
+        status_message = (
+            "✅ Enabled" if current_settings["settings"] == "true" else "❌ Disabled"
+        )
+        color = (
+            discord.Color.green()
+            if current_settings["settings"] == "true"
+            else discord.Color.red()
+        )
+    else:
+        status_message = "❌ Disabled"
+        color = discord.Color.red()
+
+    embed = discord.Embed(description=f"**{status_message}**", color=color)
+
+    try:
+        await interaction.response.send_message(embed=embed)
+    except:
+        try:
+            await interaction.user.send_message(embed=embed)
+        except discord.errors.Forbidden:
+            pass
 
 
 client.run(DISCORD_BOT_TOKEN)
