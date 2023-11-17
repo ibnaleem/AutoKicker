@@ -1,5 +1,5 @@
 import discord, gnupg, os, pymongo, datetime
-from discord import app_commands, Button, client, Embed, Intents, Interaction
+from discord import app_commands, Button, Client, Embed, Intents, Interaction
 from discord.ext import commands
 from discord.ui import View
 from pymongo import MongoClient
@@ -38,7 +38,10 @@ class InviteButton(View):
         self.add_item(
             discord.ui.Button(
                 label="🖥️ Source code",
-                style=discord.ButtonStyle.green,url="https://github.com/ibnaleem/AutoKicker/blob/main/src/autokicker.py"))
+                style=discord.ButtonStyle.green,
+                url="https://github.com/ibnaleem/AutoKicker/blob/main/src/autokicker.py",
+            )
+        )
 
     @discord.ui.button(label="📨 Support Server", style=discord.ButtonStyle.blurple)
     async def support_invite_btn(
@@ -47,7 +50,7 @@ class InviteButton(View):
         await interaction.response.send_message(self.support_invite, ephemeral=True)
 
 
-class AutoKicker(client):
+class AutoKicker(Client):
     def __init__(
         self,
         bot_id: int = 1174796137862021190,
@@ -60,10 +63,16 @@ class AutoKicker(client):
 
         self.bot_id = bot_id
         self.guild_id = guild_id
-        self.guild = discord.Client().fetch_guild(guild_id)
-        self.error_channel = discord.Client().fetch_channel(1174862833398333511)
         self.synced = synced
         self.yellow = 0xFFFF00
+
+        @property
+        async def guild(self) -> discord.Guild:
+            return await self.fetch_guild(self.guild_id)
+
+        @property
+        async def error_channel(self) -> discord.TextChannel:
+            return await self.fetch_channel(1174862833398333511)
 
         def __len__(self) -> int:
             return len(self.guilds)
@@ -135,9 +144,12 @@ class AutoKicker(client):
             else:
                 pass
 
-    async def on_guild_join(self, guild) -> None:
-        support_server = self.guild.channel.create_invite(
-            reason=f"Support server requested by {guild.owner.name}", max_uses=1
+    async def on_guild_join(self, guild: discord.Guild) -> None:
+        
+        channel = guild.get_channel(1174803169604276356)
+
+        support_server = await channel.create_invite(
+            reason=f"Support server requested", max_uses=1
         )
 
         if guild.id != self.guild_id:
@@ -190,23 +202,30 @@ class AutoKicker(client):
             pass
 
 
-client = AutoKicker() 
+client = AutoKicker()
 tree = app_commands.CommandTree(client)
 
+
 @tree.command(description="Whitelist a member from auto-kicking")
-@app_commands.has_permissions(kick_members=True)
-async def whitelist(interaction: Interaction, member: Optional[discord.Member] = None, member_id: Optional[int or str] = None):
-    
+@app_commands.checks.has_permissions(kick_members=True)
+async def whitelist(
+    interaction: Interaction,
+    member: Optional[discord.Member] = None,
+    member_id: Optional[int or str] = None,
+):
     command_user = interaction.user
 
-    if (member and not member_id):  
+    if member and not member_id:
         member_id = member.id
 
     insert_into_db({"member_id": member_id})
 
     if insert_into_db:
         await command_user.send_message(f"✅ **{member_id}** has been whitelisted")
-    
+
     else:
         # handle error
         pass
+
+
+client.run(DISCORD_BOT_TOKEN)
